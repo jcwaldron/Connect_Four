@@ -21,10 +21,10 @@ function loadBoard(board) {
         for (let j = 0; j < 7; j++) {
             let cellDiv = document.createElement("div");
             cellDiv.className = `connect-four-cell row-${i} column-${j}`;
-            cellDiv.dataset.row = i; 
-            cellDiv.dataset.column = j;
+            cellDiv.dataset.row = j; 
+            cellDiv.dataset.column = i;
            // use following line to check grid positions as needed
-           // cellDiv.innerHTML=`${i}, ${j}`
+           // cellDiv.innerHTML=`${j}, ${i}`
             rowDiv.appendChild(cellDiv);
         }
         board.appendChild(rowDiv);
@@ -39,12 +39,12 @@ function loadBoard(board) {
 
 // Function to handle player's move
 function playerMove(event) {
-    let row = event.target.dataset.row; 
-    dropPiece(row, playerPiece);
+    let column = event.target.dataset.column; 
+    dropPiece(column, playerPiece);
 
     // Set the coordinates of the most recently placed red piece
-    lastMoveRow = parseInt(row);
-    lastMoveColumn = parseInt(event.target.dataset.column);
+    lastMoveRow = parseInt(event.target.dataset.row);
+    lastMoveColumn = parseInt(column);
 
     console.log(`player move: ${lastMoveRow}, ${lastMoveColumn}`) 
 
@@ -66,8 +66,8 @@ function playerMove(event) {
 }
 
 // Function to drop a piece in the specified column
-function dropPiece(row, pieceClass) {
-    let targetCells = document.querySelectorAll(`.connect-four-cell[data-row="${row}"]`);
+function dropPiece(column, pieceClass) {
+    let targetCells = document.querySelectorAll(`.connect-four-cell[data-column="${column}"]`);
     let targetCell;
     for (let i = targetCells.length - 1; i >= 0; i--) {
         if (!targetCells[i].hasChildNodes()) {
@@ -78,9 +78,14 @@ function dropPiece(row, pieceClass) {
     if (targetCell) {
         let piece = document.createElement("div");
         piece.className = "connect-four-piece " + pieceClass;
+
+        piece.dataset.column = column;
         targetCell.appendChild(piece);
+
+        lastMoveColumn = column;
+        console.log(`drop piece: ${lastMoveColumn}`)
     } else {
-        alert("Column is full! Please choose another Column.");
+        alert("Column is full! Please choose another column.");
     }
 }
 
@@ -148,7 +153,7 @@ function placeAdjacentComputerPiece(row, column) {
                 lastMoveRow = newRow;
                 console.log("Empty cell found:", newRow, newColumn);
                 // Place the computer's piece in the empty adjacent cell
-                dropPiece(newRow, computerPiece);
+                dropPiece(newColumn, computerPiece);
                 return true; // Exit the function after placing the piece
             }
         }
