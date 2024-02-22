@@ -23,8 +23,6 @@ function loadBoard(board) {
             cellDiv.className = `connect-four-cell row-${i} column-${j}`;
             cellDiv.dataset.row = j; 
             cellDiv.dataset.column = i;
-           // use following line to check grid positions as needed
-           // cellDiv.innerHTML=`${j}, ${i}`
             rowDiv.appendChild(cellDiv);
         }
         board.appendChild(rowDiv);
@@ -40,45 +38,49 @@ function loadBoard(board) {
 // Function to handle player's move
 async function playerMove(event) {
     let column = event.target.dataset.column; 
-    console.log("Player's move started")
-    dropPiece(column, playerPiece);
-    console.log("Player's piece dropped")
-    // Set the coordinates of the most recently placed red piece
-    //lastMoveRow = parseInt(event.target.dataset.row);
-    lastMoveColumn = parseInt(column);
 
-    console.log(`player move: ${lastMoveRow}, ${lastMoveColumn}`) 
+    dropPiece(column, playerPiece);
+
+    // Set the last move column coordinate
+    lastMoveColumn = parseInt(column);
 
     // Wait for a brief delay before checking for win and showing alert
     await new Promise(resolve => setTimeout(resolve, 200));
 
-    console.log("Checking for player win")
     if (await checkForWin(lastMoveRow, lastMoveColumn, playerPiece)) {
         if (confirm("Player wins! Play again?")){
             location.reload();
         }
     } else {
-        console.log("Computer's move...")
         computerMove();
     }
 }
 
-// Function to drop a piece in the specified column
+// Function to drop a piece to bottom of column
 function dropPiece(column, pieceClass) {
+
+    // Select all cells in the specified column
     let targetCells = document.querySelectorAll(`.connect-four-cell[data-column="${column}"]`);
     let targetCell;
+
+    // Iterate through the cells in reverse order (from bottom to top)
     for (let i = targetCells.length - 1; i >= 0; i--) {
         if (!targetCells[i].hasChildNodes()) {
             targetCell = targetCells[i];
             break;
         }
     }
+
+    // If there is an empty cell available in the column
     if (targetCell) {
+        // Create a new piece element of player or computer class
         let piece = document.createElement("div");
         piece.className = "connect-four-piece " + pieceClass;
 
+        // Append the piece to the target cell
         targetCell.appendChild(piece);
 
+        // Update the coordinates of the last moved piece
         lastMoveColumn = column;
         lastMoveRow = parseInt(targetCell.getAttribute('data-row'));
 
@@ -91,7 +93,7 @@ async function computerMove() {
     // Get all cells with red pieces
     const redCells = document.querySelectorAll('.connect-four-cell .' + playerPiece);
 
-    // If there are no red cells, return
+    // If no red cells (player has not moved), don't make a move
     if (redCells.length === 0) {
         return;
     }
@@ -111,7 +113,7 @@ async function computerMove() {
         validMoveMade = placeAdjacentComputerPiece(row, col);
     }
 
-    // Wait for a brief delay before checking for win and showing alert
+    // delay for piece placement before checking win
     await new Promise(resolve => setTimeout(resolve, 100));
 
     if (await checkForWin(lastMoveRow, lastMoveColumn, computerPiece)) {
@@ -131,6 +133,7 @@ function isPlayerPiece(row, column) {
     return false;
 }
 
+// put a computer piece in a cell adjacent to any random player piece
 function placeAdjacentComputerPiece(row, column) {
     // Check adjacent cells (horizontally, vertically, and diagonally)
     for (let i = -1; i <= 1; i++) {
@@ -181,14 +184,14 @@ function checkForWin(row, column, pieceClass) {
     ) {
         return true;
     }
-    // Check diagonally 
+    // Check diagonally (bottom-left to top-right)
     if (
         checkDirection(row, column, 1, 1, pieceClass) +
         checkDirection(row, column, -1, -1, pieceClass) >= 3
     ) {
         return true;
     }
-    // Check diagonally 
+    // Check diagonally (top-left to bottom-right)
     if (
         checkDirection(row, column, 1, -1, pieceClass) +
         checkDirection(row, column, -1, 1, pieceClass) >= 3
