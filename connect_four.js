@@ -38,31 +38,29 @@ function loadBoard(board) {
 }
 
 // Function to handle player's move
-function playerMove(event) {
+async function playerMove(event) {
     let column = event.target.dataset.column; 
+    console.log("Player's move started")
     dropPiece(column, playerPiece);
-
+    console.log("Player's piece dropped")
     // Set the coordinates of the most recently placed red piece
-    lastMoveRow = parseInt(event.target.dataset.row);
+    //lastMoveRow = parseInt(event.target.dataset.row);
     lastMoveColumn = parseInt(column);
 
     console.log(`player move: ${lastMoveRow}, ${lastMoveColumn}`) 
 
-    // Create a promise to resolve after a brief delay
-    const delay = (ms) => {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    };
-
     // Wait for a brief delay before checking for win and showing alert
-    delay(200).then(async () => {
-        if (checkForWin(lastMoveRow, lastMoveColumn, playerPiece)) {
-            alert("Player wins!");
-            return;
-        } else {
-            computerMove();
-        }
-    });
+    await new Promise(resolve => setTimeout(resolve, 200));
 
+    console.log("Checking for player win")
+    if (await checkForWin(lastMoveRow, lastMoveColumn, playerPiece)) {
+        if (confirm("Player wins! Play again?")){
+            location.reload();
+        }
+    } else {
+        console.log("Computer's move...")
+        computerMove();
+    }
 }
 
 // Function to drop a piece in the specified column
@@ -79,17 +77,17 @@ function dropPiece(column, pieceClass) {
         let piece = document.createElement("div");
         piece.className = "connect-four-piece " + pieceClass;
 
-        piece.dataset.column = column;
         targetCell.appendChild(piece);
 
         lastMoveColumn = column;
-        console.log(`drop piece: ${lastMoveColumn}`)
+        lastMoveRow = parseInt(targetCell.getAttribute('data-row'));
+
     } else {
         alert("Column is full! Please choose another column.");
     }
 }
 
-function computerMove() {
+async function computerMove() {
     // Get all cells with red pieces
     const redCells = document.querySelectorAll('.connect-four-cell .' + playerPiece);
 
@@ -113,19 +111,15 @@ function computerMove() {
         validMoveMade = placeAdjacentComputerPiece(row, col);
     }
 
-    // Create a promise to resolve after a brief delay
-    const delay = (ms) => {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    };
-
     // Wait for a brief delay before checking for win and showing alert
-    delay(100).then(async () => {
-        if (checkForWin(lastMoveRow, lastMoveColumn, computerPiece)) {
-            alert("Computer wins!");
-        }
-    });
-}
+    await new Promise(resolve => setTimeout(resolve, 100));
 
+    if (await checkForWin(lastMoveRow, lastMoveColumn, computerPiece)) {
+        if(confirm("Computer wins! Play again?")){
+            location.reload();
+        }
+    }
+}
 
 
 // check if the cell contains a player's piece
@@ -147,11 +141,9 @@ function placeAdjacentComputerPiece(row, column) {
             }
             let newRow = row + i;
             let newColumn = column + j;
-            console.log("Checking cell:", newRow, newColumn);
             if (isEmptyCell(newRow, newColumn)) {
                 lastMoveColumn = newColumn;
                 lastMoveRow = newRow;
-                console.log("Empty cell found:", newRow, newColumn);
                 // Place the computer's piece in the empty adjacent cell
                 dropPiece(newColumn, computerPiece);
                 return true; // Exit the function after placing the piece
@@ -164,7 +156,7 @@ function placeAdjacentComputerPiece(row, column) {
 
 // check if the cell coordinates are valid
 function isValidCell(row, column) {
-    return row >= 0 && row < 6 && column >= 0 && column < 7;
+    return row >= 0 && row <= 6 && column >= 0 && column <= 7;
 }
 
 // check if the cell is empty
@@ -177,15 +169,15 @@ function isEmptyCell(row, column) {
 function checkForWin(row, column, pieceClass) {
     // Check horizontally
     if (
-        checkDirection(row, column, 1, 0, pieceClass) +
-        checkDirection(row, column, -1, 0, pieceClass) >= 3
+        checkDirection(row, column, 0, 1, pieceClass) +
+        checkDirection(row, column, 0, -1, pieceClass) >= 3
     ) {
         return true;
     }
     // Check vertically
     if (
-        checkDirection(row, column, 0, 1, pieceClass) +
-        checkDirection(row, column, 0, -1, pieceClass) >= 3
+        checkDirection(row, column, 1, 0, pieceClass) +
+        checkDirection(row, column, -1, 0, pieceClass) >= 3
     ) {
         return true;
     }
@@ -218,15 +210,16 @@ function checkDirection(row, column, rowIncrement, columnIncrement, pieceClass) 
         newColumn += columnIncrement;
 
         let cell = document.querySelector(`.connect-four-cell[data-row="${newRow}"][data-column="${newColumn}"]`);
+
         if (!cell || !cell.firstChild || !cell.firstChild.classList.contains(pieceClass)) {
             break; // Stop if the cell is empty or contains a different color piece
-        }
+        }  
+        
         count++;
     }
+
     return count;
 }
-
-
 
 
 // Call the loadConnectFour function when the page loads
