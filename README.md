@@ -5,6 +5,8 @@
 
 The computer's moves are determined by selecting a random player piece on the board, then choosing a random adjacent space to drop the computer's piece.
 
+NOTE: This code is still unfinished, though it does function!
+
 
 ## Demo
 
